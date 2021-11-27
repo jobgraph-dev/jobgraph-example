@@ -1,0 +1,65 @@
+---
+stages:
+- decision
+- generated-pipeline
+
+variables:
+    TARGET_JOBS_METHOD: default     # Can be overriden by schedules
+
+decision:
+    artifacts:
+        expire_in: 1 year
+        paths:
+        - artifacts/*
+    image: registry.gitlab.com/johanlorenzo/jobgraph/decision:latest@sha256:e9f8e41bf4e3c113bf38c56e744a1936c127b22102dc57e6e3297568dcb0f438
+    retry:
+        max: 2
+        when:
+        - unknown_failure
+        - stale_schedule
+        - runner_system_failure
+        - stuck_or_timeout_failure
+    script:
+    - >-
+        if [ -n "$CI_MERGE_REQUEST_SOURCE_PROJECT_URL" ] && [ "$CI_MERGE_REQUEST_SOURCE_PROJECT_URL" != '' ]; then
+            export BASE_REPOSITORY="$CI_MERGE_REQUEST_SOURCE_PROJECT_URL"
+        else
+            export BASE_REPOSITORY="$CI_PROJECT_URL"
+        fi
+
+    # We fetch the main branch of the repository so that jobgraph can determine
+    # the actual base revision in case $CI_COMMIT_BEFORE_SHA equals
+    # "0000000000000000000000000000000000000000".
+    #
+    # See https://docs.gitlab.com/ee/ci/variables/predefined_variables.html
+    - export DEFAULT_BRANCH_SHORT_NAME="$(git ls-remote --symref origin HEAD | awk '/^ref:/ {sub(/refs\/heads\//, "", $2); print $2}')"
+    - git fetch "$GIT_REMOTE_NAME" "$DEFAULT_BRANCH_SHORT_NAME"
+
+    - >-
+        jobgraph decision
+        --base-repository="$BASE_REPOSITORY"
+        --base-rev="$CI_COMMIT_BEFORE_SHA"
+        --head-ref="$CI_COMMIT_BRANCH"
+        --head-repository="$CI_PROJECT_URL"
+        --head-rev="$CI_COMMIT_SHA"
+        --head-tag="$CI_COMMIT_TAG"
+        --is-head-ref-protected="$CI_COMMIT_REF_PROTECTED"
+        --message="$CI_COMMIT_MESSAGE"
+        --owner="$CI_COMMIT_AUTHOR"
+        --pipeline-source="$CI_PIPELINE_SOURCE"
+        --target-jobs-method="$TARGET_JOBS_METHOD"
+    stage: decision
+    variables:
+        # We need the full history to ensure jobgraph makes the right decisions
+        GIT_DEPTH: 0
+        GIT_STRATEGY: clone
+        GIT_REMOTE_NAME: origin
+
+
+generated-pipeline:
+    stage: generated-pipeline
+    trigger:
+        include:
+        - artifact: artifacts/generated-gitlab-ci.yml
+          job: decision
+        strategy: depend
