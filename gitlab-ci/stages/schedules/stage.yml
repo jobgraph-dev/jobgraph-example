@@ -1,0 +1,54 @@
+# This file lets jobgraph update Gitlab CI schedules based on the
+# content of `gitlab-ci/schedules.yml`. Modify this current file
+# at your own risks.
+---
+loader: jobgraph.loader.transform:loader
+
+transforms:
+- jobgraph.transforms.job:transforms
+
+
+job_defaults:
+    before_script:
+    - cd "${TF_ROOT}"
+    image: {docker_image_reference: "<jobgraph_schedules>"}
+    optimization:
+        skip_unless_changed:
+        - gitlab-ci/schedules.yml
+        - terraform/**/*
+    # We need to get access to $JOBGRAPH_BOT_GITLAB_TOKEN even for a `terraform plan`
+    run_on_git_branches:
+    - main
+    runner_alias: misc
+    variables:
+        TF_ADDRESS: ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/terraform/state/jobgraph
+        TF_ROOT: /jobgraph/terraform
+
+jobs:
+    plan:
+        artifacts:
+            name: plan
+            paths:
+            - ${TF_ROOT}/plan.cache
+            reports:
+                terraform: ${TF_ROOT}/plan.json
+
+        description: "Report what changes are going to be made to Gitlab CI schedules, based on the content of schedules.yml"
+        script:
+        - >-
+            gitlab-terraform plan
+            -var "GITLAB_PROJECT_ID=${CI_PROJECT_ID}"
+            -var "JOBGRAPH_BOT_GITLAB_TOKEN=${JOBGRAPH_BOT_GITLAB_TOKEN}"
+            -var "SCHEDULES_YML_PATH=${CI_PROJECT_DIR}/gitlab-ci/schedules.yml"
+        - gitlab-terraform plan-json
+
+    apply:
+        description: "Change Gitlab CI schedules, based on the content of schedules.yml"
+        environment:
+            name: jobgraph
+
+        script:
+        # No need to provide variable because it is going to reuse the existing cached plan.
+        - gitlab-terraform apply
+
+        upstream_dependencies: {plan: "plan"}
