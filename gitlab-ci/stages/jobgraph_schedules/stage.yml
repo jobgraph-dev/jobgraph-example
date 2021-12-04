@@ -1,4 +1,4 @@
-# This file lets jobgraph update Gitlab CI schedules based on the
+# This file lets jobgraph modify Gitlab CI schedules based on the
 # content of `gitlab-ci/schedules.yml`. Modify this current file
 # at your own risks.
 ---
