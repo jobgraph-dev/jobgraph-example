@@ -11,7 +11,7 @@ transforms:
 job_defaults:
     before_script:
     - cd "${TF_ROOT}"
-    image: {docker_image_reference: "<jobgraph_schedules>"}
+    image: {docker_image_reference: "<jobgraph>"}
     optimization:
         skip_unless_changed:
         - gitlab-ci/schedules.yml

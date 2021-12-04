@@ -2,5 +2,5 @@
 jobs:
     single_job:
         cron: 00 12 * * 1
-        description: Schedule a single targeted job each Monday, 1pm UTC.
+        description: Schedule a single targeted job each Monday, noon UTC.
         target_jobs_method: default
