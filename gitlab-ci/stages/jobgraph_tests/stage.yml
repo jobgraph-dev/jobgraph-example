@@ -1,3 +1,5 @@
+# This stage ensure your jobgraph definitions are correctly linted.
+# Modify this current file at your own risks.
 ---
 loader: jobgraph.loader.transform:loader
 
@@ -13,3 +15,5 @@ jobs_from:
 job_defaults:
     runner_alias: t-linux
     timeout: 3 minutes
+    variables:
+        JOBGRAPH_ROOT_DIR: $CI_PROJECT_DIR/gitlab-ci

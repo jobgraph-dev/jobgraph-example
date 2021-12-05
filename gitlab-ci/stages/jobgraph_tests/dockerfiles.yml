@@ -1,11 +1,12 @@
+# This stage ensure your jobgraph definitions are correctly linted.
+# Modify this current file at your own risks.
 ---
 job_defaults:
     optimization:
         skip_unless_changed:
-        - "gitlab-ci/docker/*/Dockerfile"
-
+        - "gitlab-ci/**/Dockerfile"
 
 hadolint:
     description: "Run `hadolint` to validate dockerfiles"
     image: {"docker_image_reference": "<hadolint>"}
-    script: hadolint $(find gitlab-ci/docker/ -name 'Dockerfile')
+    script: hadolint $(find "$JOBGRAPH_ROOT_DIR" -name 'Dockerfile')

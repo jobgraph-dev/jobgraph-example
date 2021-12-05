@@ -1,3 +1,5 @@
+# This stage ensure your jobgraph definitions are correctly linted.
+# Modify this current file at your own risks.
 ---
 job_defaults:
     image: {"docker_image_reference": "<jobgraph_tests>"}
@@ -5,7 +7,6 @@ job_defaults:
         skip_unless_changed:
         - "gitlab-ci/**/*.yml"
 
-
 yamllint:
     description: "Run `yamllint` to validate the latest changes"
-    script: yamllint gitlab-ci/
+    script: yamllint "$JOBGRAPH_ROOT_DIR"
