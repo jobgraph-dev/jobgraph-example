@@ -26,4 +26,3 @@ isort:
 pyupgrade:
     description: "Run `pyupgrade` to ensure new code is written with the latest syntax"
     script: pyupgrade --py310-plus $(find "$JOBGRAPH_ROOT_DIR" -name '*.py')
-
