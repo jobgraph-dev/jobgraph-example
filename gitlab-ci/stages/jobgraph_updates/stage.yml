@@ -18,7 +18,7 @@ jobs:
         image: {docker_image_reference: "<jobgraph>"}
         runner_alias: misc
         # We want to run this job in 2 scenarios:
-        #  * when the decision image has changed (which is handled by the "job" transform)
+        #  * when the jobgraph image has changed (which is handled by the "job" transform)
         #  * on a regular schedule to update dependencies periodically
         schedules:
             jobgraph_updates: true
